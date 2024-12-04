@@ -47,10 +47,59 @@ function VaccinationPDFGenerator() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthday, setBirthday] = useState('');
+  const [errors, setErrors] = useState({});
+
+  // Add validation functions
+  const validateName = (name) => {
+    return /^[A-Za-z]+$/.test(name);
+  };
+
+  const validateBirthday = (date) => {
+    const birthDate = new Date(date);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const minAge = 4; // Updated minimum age requirement
+    const maxAge = 120; // Maximum reasonable age
+    
+    return age >= minAge && age <= maxAge;
+  };
+
+  // Update handlers with validation
+  const handleFirstNameChange = (e) => {
+    const value = e.target.value;
+    setFirstName(value);
+    if (!validateName(value)) {
+      setErrors(prev => ({ ...prev, firstName: 'Please use letters only' }));
+    } else {
+      setErrors(prev => ({ ...prev, firstName: null }));
+    }
+  };
+
+  const handleLastNameChange = (e) => {
+    const value = e.target.value;
+    setLastName(value);
+    if (!validateName(value)) {
+      setErrors(prev => ({ ...prev, lastName: 'Please use letters only' }));
+    } else {
+      setErrors(prev => ({ ...prev, lastName: null }));
+    }
+  };
+
+  const handleBirthdayChange = (e) => {
+    const value = e.target.value;
+    setBirthday(value);
+    if (!validateBirthday(value)) {
+      setErrors(prev => ({ ...prev, birthday: 'Age must be between 4 and 120 years' }));
+    } else {
+      setErrors(prev => ({ ...prev, birthday: null }));
+    }
+  };
 
   const handleGeneratePDF = async () => {
-    if (!firstName || !lastName || !birthday) {
-      alert('Please enter your first name, last name, and birthday!');
+    // Validate all fields before generating PDF
+    if (!firstName || !lastName || !birthday || 
+        !validateName(firstName) || !validateName(lastName) || !validateBirthday(birthday)) {
+      alert('Please correct all errors before generating PDF');
       return;
     }
 
@@ -117,45 +166,85 @@ function VaccinationPDFGenerator() {
   };
 
   return (
-    <div style={{ fontFamily: 'Arial' }}>
+    <div style={{ 
+      fontFamily: 'Arial',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
       <h1>Get Vaccinated and a PDF</h1>
-      <label>
-        Enter your first name:
-        <input
-          type="text"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          style={{ marginLeft: '10px' }}
-        />
-      </label>
-      <br />
-      <label>
-        Enter your last name:
-        <input
-          type="text"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          style={{ marginLeft: '10px', marginTop: '10px' }}
-        />
-      </label>
-      <br />
-      <label>
-        Enter your birthday:
-        <input
-          type="date"
-          value={birthday}
-          onChange={(e) => setBirthday(e.target.value)}
-          style={{ marginLeft: '10px', marginTop: '10px' }}
-        />
-      </label>
-      <br />
+      <div style={{ marginBottom: '20px' }}>
+        <label>
+          First Name:
+          <input
+            type="text"
+            value={firstName}
+            onChange={handleFirstNameChange}
+            style={{ 
+              marginLeft: '10px',
+              borderColor: errors.firstName ? 'red' : undefined 
+            }}
+          />
+        </label>
+        {errors.firstName && (
+          <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>
+            {errors.firstName}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <label>
+          Last Name:
+          <input
+            type="text"
+            value={lastName}
+            onChange={handleLastNameChange}
+            style={{ 
+              marginLeft: '10px',
+              borderColor: errors.lastName ? 'red' : undefined 
+            }}
+          />
+        </label>
+        {errors.lastName && (
+          <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>
+            {errors.lastName}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <label>
+          Birthday:
+          <input
+            type="date"
+            value={birthday}
+            onChange={handleBirthdayChange}
+            style={{ 
+              marginLeft: '10px',
+              borderColor: errors.birthday ? 'red' : undefined 
+            }}
+          />
+        </label>
+        {errors.birthday && (
+          <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>
+            {errors.birthday}
+          </div>
+        )}
+      </div>
+
       <button
         onClick={handleGeneratePDF}
         style={{
           marginTop: '20px',
-          padding: '5px 10px',
+          padding: '10px 20px',
           cursor: 'pointer',
+          opacity: Object.values(errors).some(error => error) ? 0.5 : 1
         }}
+        disabled={Object.values(errors).some(error => error)}
       >
         Generate PDF
       </button>
